@@ -4,7 +4,7 @@
     "description": "This module focuses on making using Neo4j for JavaScript easier by making its coding cleaner and shorter.",
     "main": "src/index.js",
     "scripts": {
-        "eslint": "eslint -c .eslintrc ./src/ --fix",
+        "eslint": "eslint -c .eslintrc ./src/",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "repository": {

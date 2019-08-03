@@ -4,6 +4,9 @@
         "jasmine": true,
         "es6": true
     },
+    "parserOptions": {
+        "ecmaVersion": 2017
+    },
     "rules": {
         "comma-dangle": [
             2,
