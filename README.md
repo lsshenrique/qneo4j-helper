@@ -118,7 +118,7 @@ let date = helper.parseDate(dateSource, DATE_TYPE.DATE) // returns a Neo4j Date
 ------------
 
 Parse the Neo4j response to a json structure:
-```json
+```javascript
 // Original Neo4j Result:
 Record {
     keys: [ 'myNode' ],
