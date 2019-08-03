@@ -1,33 +1,35 @@
+"use strict";
+
 const _ = require("lodash");
 const moment = require("moment");
-const { types } = require('neo4j-driver').v1
+const {types} = require('neo4j-driver').v1;
 
 const dateFunctions = {
     Date: {
         _isDateTypeNeo4j: true,
         toStandardDate: (value) => new Date(value.year, value.month - 1, value.day),
-        toMoment: (value) => moment(dateFunctions.Date.toStandardDate(value))
+        toMoment: (value) => moment(dateFunctions.Date.toStandardDate(value)),
     },
     DateTime: {
         _isDateTypeNeo4j: true,
         toStandardDate: (value) => new Date(value.year, value.month - 1, value.day, value.hour, value.minute, value.second, value.nanosecond),
-        toMoment: (value) => moment(dateFunctions.DateTime.toStandardDate(value))
+        toMoment: (value) => moment(dateFunctions.DateTime.toStandardDate(value)),
     },
     LocalDateTime: {
         _isDateTypeNeo4j: true,
         toStandardDate: (value) => new Date(value.year, value.month - 1, value.day, value.hour, value.minute, value.second, value.nanosecond),
-        toMoment: (value) => moment(dateFunctions.LocalDateTime.toStandardDate(value))
+        toMoment: (value) => moment(dateFunctions.LocalDateTime.toStandardDate(value)),
     },
     Time: {
         _isDateTypeNeo4j: true,
         toStandardDate: (value) => new Date(0, 0, 0, value.hour, value.minute, value.second, value.nanosecond),
-        toMoment: (value) => moment(dateFunctions.Time.toStandardDate(value))
+        toMoment: (value) => moment(dateFunctions.Time.toStandardDate(value)),
     },
     LocalTime: {
         _isDateTypeNeo4j: true,
         toStandardDate: (value) => new Date(0, 0, 0, value.hour, value.minute, value.second, value.nanosecond),
-        toMoment: (value) => moment(dateFunctions.LocalTime.toStandardDate(value))
-    }
+        toMoment: (value) => moment(dateFunctions.LocalTime.toStandardDate(value)),
+    },
 };
 
 const DATE_TYPE = {
@@ -38,44 +40,29 @@ const DATE_TYPE = {
     DATE_TIME: types.DateTime,
 };
 
-function addValueToObj(obj, key, value, options) {
-    let valueAux = value;
+function injectDateFunctions() {
+    for (const typeName in dateFunctions) {
+        if (dateFunctions.hasOwnProperty(typeName)) {
+            const prototypes = dateFunctions[typeName];
 
-    if (value && typeof value === 'object') {
-        if (QNeo4jHelper.isDateTypeNeo4j(value)) {
-            if (options.dateType === 'moment') {
-                valueAux = dateFunctions[value.constructor.name].toMoment(value)
-            } else if (options.dateType === 'native') {
-                valueAux = dateFunctions[value.constructor.name].toStandardDate(value);
-            } else {
-                valueAux = value;
-            }
-        } else {
-            valueAux = Array.isArray(value) ? [] : {};
-            const props = value.properties || value;
+            types[typeName].prototype._isDateTypeNeo4j = prototypes._isDateTypeNeo4j;
 
-            for (const keyProp in props)
-                addValueToObj(valueAux, keyProp, props[keyProp], options);
+            types[typeName].prototype.toStandardDate = function() {
+                return prototypes.toStandardDate(this);
+            };
+
+            types[typeName].prototype.toMoment = function() {
+                return prototypes.toMoment(this);
+            };
         }
     }
-
-    const fieldName = generateFieldName(key);
-    obj[fieldName] = valueAux;
 }
 
-function generateFieldName(name) {
-    return name.indexOf('.') >= 0 ? name.split('.').pop() : name;
-}
-
-function hasFields(records) {
-    return records && records.length > 0 && records[0]._fields && records[0]._fields.length > 0;
-}
-
-class QNeo4jHelper {
+module.exports = class QNeo4jHelper {
     static objToString(...args) {
         if (_.isEmpty(args) || _.every(args, _.isEmpty)) return "";
 
-        let obj = Object.assign({}, ...args);
+        const obj = Object.assign({}, ...args);
         return JSON.stringify(obj).replace(/\"([^(\")"]+)\":/g, "$1:");
     }
 
@@ -83,8 +70,8 @@ class QNeo4jHelper {
         if (!prefix || typeof prefix !== "string")
             return this.objToString(...args);
 
-        let obj = Object.assign({}, ...args);
-        let params = {};
+        const obj = Object.assign({}, ...args);
+        const params = {};
 
         for (const key in obj) {
             if (obj.hasOwnProperty(key)) {
@@ -116,18 +103,18 @@ class QNeo4jHelper {
         return null;
     }
 
-    //date: string, native, moment
+    // date: string, native, moment
     static parseDate(date, dateTypeNeo4j = DATE_TYPE.LOCAL_DATE_TIME) {
         let dateParsed = null;
 
         if (date && dateTypeNeo4j.fromStandardDate) {
             if (this.isDateTypeNeo4j(date)) {
-                let dateAux = this.toStandardDate(date)
+                const dateAux = this.toStandardDate(date);
                 dateParsed = dateTypeNeo4j.fromStandardDate(dateAux);
             } else if (date instanceof Date) {
                 dateParsed = dateTypeNeo4j.fromStandardDate(date);
             } else if (date instanceof moment) {
-                if (dtMoment.isValid()) {
+                if (date.isValid()) {
                     dateParsed = dateTypeNeo4j.fromStandardDate(date.toDate());
                 }
             } else {
@@ -142,9 +129,9 @@ class QNeo4jHelper {
         return dateParsed;
     }
 
-    //date: string, native, moment
+    // date: string, native, moment
     static parseDateCypher(date, dateTypeNeo4j = DATE_TYPE.LOCAL_DATE_TIME) {
-        let dateNeo4j = this.parseDate(date, dateTypeNeo4j);
+        const dateNeo4j = this.parseDate(date, dateTypeNeo4j);
 
         if (dateNeo4j) {
             return `${dateTypeNeo4j.name}(${dateNeo4j.toString()})`;
@@ -153,48 +140,60 @@ class QNeo4jHelper {
     }
 
     static parseResponse(records, options) {
-        if (!hasFields(records)) return [];
+        if (!this._hasFields(records)) return [];
 
-        options = Object.assign({}, { dateType: "moment" }, options)
-
-        injectDateFunctions();
+        const opt = Object.assign({}, {dateType: "moment"}, options);
 
         return records.map(record => {
-            let obj = {};
+            const obj = {};
 
             record.keys.forEach((key, index) => {
                 const value = record._fields[index];
-                addValueToObj(obj, key, value, options);
-            })
+                this._addValueToObj(obj, key, value, opt);
+            });
 
             return obj;
-        })
-    };
-}
-
-function injectDateFunctions() {
-    for (const typeName in dateFunctions) {
-        if (dateFunctions.hasOwnProperty(typeName)) {
-            const prototypes = dateFunctions[typeName];
-
-            types[typeName].prototype._isDateTypeNeo4j = prototypes._isDateTypeNeo4j;
-
-            types[typeName].prototype.toStandardDate = function() {
-                return prototypes.toStandardDate(this);
-            };
-
-            types[typeName].prototype.toMoment = function() {
-                return prototypes.toMoment(this);
-            };
-        }
+        });
     }
-}
 
-module.exports = QNeo4jHelper;
+    static _addValueToObj(obj, key, value, options) {
+        let valueAux = value;
+
+        if (value && typeof value === 'object') {
+            if (this.isDateTypeNeo4j(value)) {
+                if (options.dateType === 'moment') {
+                    valueAux = dateFunctions[value.constructor.name].toMoment(value);
+                } else if (options.dateType === 'native') {
+                    valueAux = dateFunctions[value.constructor.name].toStandardDate(value);
+                } else {
+                    valueAux = value;
+                }
+            } else {
+                valueAux = Array.isArray(value) ? [] : {};
+                const props = value.properties || value;
+
+                for (const keyProp in props)
+                    this._addValueToObj(valueAux, keyProp, props[keyProp], options);
+            }
+        }
+
+        const fieldName = this._generateFieldName(key);
+        obj[fieldName] = valueAux;
+    }
+
+    static _generateFieldName(name) {
+        return name.indexOf('.') >= 0 ? name.split('.').pop() : name;
+    }
+
+    static _hasFields(records) {
+        return records && records.length > 0 && records[0]._fields && records[0]._fields.length > 0;
+    }
+};
+
 module.exports.injectDateFunctions = injectDateFunctions;
 module.exports.setGlobalOptions = function(options) {
-    let opts = Object.assign({}, { dateLocale: 'pt-br' }, options);
-    if (opts.dateLocale) moment.locale(opts.dateLocale)
-}
+    const opts = Object.assign({}, {dateLocale: 'pt-br'}, options);
+    if (opts.dateLocale) moment.locale(opts.dateLocale);
+};
 module.exports.DATE_TYPE = DATE_TYPE;
 module.exports.dateFunctions = dateFunctions;
