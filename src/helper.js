@@ -134,7 +134,7 @@ module.exports = class QNeo4jHelper {
         const dateNeo4j = this.parseDate(date, dateTypeNeo4j);
 
         if (dateNeo4j) {
-            return `${dateTypeNeo4j.name}(${dateNeo4j.toString()})`;
+            return `${dateTypeNeo4j.name}("${dateNeo4j.toString()}")`;
         }
         return null;
     }
