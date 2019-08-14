@@ -2,7 +2,7 @@
 
 const _ = require("lodash");
 const moment = require("moment");
-const {types} = require('neo4j-driver').v1;
+const { types } = require('neo4j-driver').v1;
 
 const dateFunctions = {
     Date: {
@@ -87,9 +87,23 @@ module.exports = class QNeo4jHelper {
         return value && value[`__is${typeName}__`] && dateFunctions[typeName];
     }
 
-    static toStandardDate(dateNeo4j) {
-        if (this.isDateTypeNeo4j(dateNeo4j)) {
-            return dateFunctions[dateNeo4j.constructor.name].toStandardDate(dateNeo4j);
+    static isDateObject(value) {
+        return typeof value === "object" &&
+            Object.keys(value).some(e =>  ["year", "month", "day", "hour", "minute", "second"].indexOf(e) > -1);
+    }
+
+    static toStandardDate(value) {
+        if (this.isDateTypeNeo4j(value)) {
+            return dateFunctions[value.constructor.name].toStandardDate(value);
+        } else if (this.isDateObject(value)) {
+            return new Date(
+                value.year || 0,
+                value.month - 1 || 0,
+                value.day || 0,
+                value.hour || 0,
+                value.minute || 0,
+                value.second || 0
+            );
         }
 
         return null;
@@ -117,8 +131,12 @@ module.exports = class QNeo4jHelper {
                 if (date.isValid()) {
                     dateParsed = dateTypeNeo4j.fromStandardDate(date.toDate());
                 }
+            } else if (this.isDateObject(date)) {
+                const dateAux = this.toStandardDate(date);
+                dateParsed = dateTypeNeo4j.fromStandardDate(dateAux);
             } else {
-                const dtMoment = moment(date, 'DD/MM/YYYY');
+                const format = Number.isInteger(date) ? null : 'DD/MM/YYYY'
+                const dtMoment = moment(date, format);
 
                 if (dtMoment.isValid()) {
                     dateParsed = dateTypeNeo4j.fromStandardDate(dtMoment.toDate());
@@ -142,7 +160,7 @@ module.exports = class QNeo4jHelper {
     static parseResponse(records, options) {
         if (!this._hasFields(records)) return [];
 
-        const opt = Object.assign({}, {dateType: "moment"}, options);
+        const opt = Object.assign({}, { dateType: "moment" }, options);
 
         return records.map(record => {
             const obj = {};
@@ -192,7 +210,7 @@ module.exports = class QNeo4jHelper {
 
 module.exports.injectDateFunctions = injectDateFunctions;
 module.exports.setGlobalOptions = function(options) {
-    const opts = Object.assign({}, {dateLocale: 'pt-br'}, options);
+    const opts = Object.assign({}, { dateLocale: 'pt-br' }, options);
     if (opts.dateLocale) moment.locale(opts.dateLocale);
 };
 module.exports.DATE_TYPE = DATE_TYPE;
