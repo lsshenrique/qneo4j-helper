@@ -74,7 +74,16 @@ let dateToParse = moment("30/07/2019") // moment date
 // or
 let dateToParse = neo4j.types.DateTime.fromStandardDate(new Date(2019, 6, 30)) // Neo4j date
 
-let date = helper.parseDate(dateSource) // returns a Neo4j LocalDateTime 
+// THEN:
+let date = helper.parseDate(dateSource) // returns a Neo4j LocalDateTime
+
+// more options...
+let dateToParse = 201907 // any format that can be informed, format: YYYYMM
+let date = helper.parseDate(dateToParse, {
+    inputFormat: "YYYYMM",
+    dateTypeNeo4j: DATE_TYPE.LOCAL_DATE_TIME
+})  
+// returns a Neo4j LocalDateTime
 ```
 Its possible to inform the Neo4j date type to return, the options are:
 - LOCAL_TIME
@@ -84,6 +93,7 @@ Its possible to inform the Neo4j date type to return, the options are:
 - DATE_TIME
 
 ``` javascript
+const { DATE_TYPE } = helper
 let date = helper.parseDate(dateSource, DATE_TYPE.DATE) // returns a Neo4j Date
 ```
 
