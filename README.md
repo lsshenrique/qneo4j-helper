@@ -64,7 +64,7 @@ date instanceof moment // returns true
 
 ------------
 
-Parse any date (string, native js, moment, neo4j) to Neo4j date:
+Parse any date (string, native js, moment, neo4j, number) to Neo4j date:
 ``` javascript
 let dateToParse = "30/07/2019" // DD/MM/YYYY
 // or
@@ -79,10 +79,7 @@ let date = helper.parseDate(dateSource) // returns a Neo4j LocalDateTime
 
 // more options...
 let dateToParse = 201907 // any format that can be informed, format: YYYYMM
-let date = helper.parseDate(dateToParse, {
-    inputFormat: "YYYYMM",
-    dateTypeNeo4j: DATE_TYPE.LOCAL_DATE_TIME
-})  
+let date = helper.parseDate(dateToParse, DATE_TYPE.LOCAL_DATE_TIME, "YYYYMM") // returns "Date('2019-07-01')"
 // returns a Neo4j LocalDateTime
 ```
 Its possible to inform the Neo4j date type to return, the options are:
@@ -99,7 +96,7 @@ let date = helper.parseDate(dateSource, DATE_TYPE.DATE) // returns a Neo4j Date
 
 ------------
 
-Parse any date (string, native js, moment, neo4j) to cypher syntax:
+Parse any date (string, native js, moment, neo4j, number) to cypher syntax:
 ``` javascript
 let dateToParse = "30/07/2019" // DD/MM/YYYY
 // or
@@ -119,11 +116,7 @@ let date = helper.parseDateCypher(dateSource, DATE_TYPE.DATE) // returns "Date('
 
 // more options...
 let dateToParse = 201907 // any format that can be informed, format: YYYYMM
-let date = helper.parseDateCypher(dateToParse, {
-    inputFormat: "YYYYMM",
-    dateTypeNeo4j: DATE_TYPE.DATE
-}) 
-// returns "Date('2019-07-01')"
+let date = helper.parseDateCypher(dateToParse, DATE_TYPE.DATE, "YYYYMM") // returns "Date('2019-07-01')"
 ```
 Its possible to inform the Neo4j date type to return, the options are:
 - LOCAL_TIME
