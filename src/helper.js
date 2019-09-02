@@ -58,6 +58,10 @@ function injectDateFunctions() {
     }
 }
 
+function getDateTypeNeo4jFromOptions(options) {
+    return typeof options === 'function' ? options : options.dateTypeNeo4j || DATE_TYPE.LOCAL_DATE_TIME;
+}
+
 module.exports = class QNeo4jHelper {
     static objToString(...args) {
         if (_.isEmpty(args) || _.every(args, _.isEmpty)) return "";
@@ -88,8 +92,8 @@ module.exports = class QNeo4jHelper {
     }
 
     static isDateObject(value) {
-        return typeof value === "object" &&
-            Object.keys(value).some(e =>  ["year", "month", "day", "hour", "minute", "second"].indexOf(e) > -1);
+        return typeof value === "object"
+            && Object.keys(value).some(e => ["year", "month", "day", "hour", "minute", "second"].indexOf(e) > -1);
     }
 
     static toStandardDate(value) {
@@ -118,8 +122,10 @@ module.exports = class QNeo4jHelper {
     }
 
     // date: string, native, moment
-    static parseDate(date, dateTypeNeo4j = DATE_TYPE.LOCAL_DATE_TIME) {
+    static parseDate(date, options) {
+        const dateTypeNeo4j = getDateTypeNeo4jFromOptions(options);
         let dateParsed = null;
+        let inputFormat = options.inputFormat;
 
         if (date && dateTypeNeo4j.fromStandardDate) {
             if (this.isDateTypeNeo4j(date)) {
@@ -135,8 +141,10 @@ module.exports = class QNeo4jHelper {
                 const dateAux = this.toStandardDate(date);
                 dateParsed = dateTypeNeo4j.fromStandardDate(dateAux);
             } else {
-                const format = Number.isInteger(date) ? null : 'DD/MM/YYYY'
-                const dtMoment = moment(date, format);
+                if (!inputFormat && !Number.isInteger(date))
+                    inputFormat = 'DD/MM/YYYY';
+
+                const dtMoment = moment(date, inputFormat);
 
                 if (dtMoment.isValid()) {
                     dateParsed = dateTypeNeo4j.fromStandardDate(dtMoment.toDate());
@@ -147,9 +155,9 @@ module.exports = class QNeo4jHelper {
         return dateParsed;
     }
 
-    // date: string, native, moment
-    static parseDateCypher(date, dateTypeNeo4j = DATE_TYPE.LOCAL_DATE_TIME) {
-        const dateNeo4j = this.parseDate(date, dateTypeNeo4j);
+    static parseDateCypher(date, options) {
+        const dateNeo4j = this.parseDate(date, options);
+        const dateTypeNeo4j = getDateTypeNeo4jFromOptions(options);
 
         if (dateNeo4j) {
             return `${dateTypeNeo4j.name}("${dateNeo4j.toString()}")`;
