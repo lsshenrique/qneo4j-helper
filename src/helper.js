@@ -12,22 +12,22 @@ const dateFunctions = {
     },
     DateTime: {
         _isDateTypeNeo4j: true,
-        toStandardDate: (value) => new Date(value.year, value.month - 1, value.day, value.hour, value.minute, value.second, value.nanosecond),
+        toStandardDate: (value) => new Date(value.year, value.month - 1, value.day, value.hour, value.minute, value.second, value.nanosecond / 1e+6),
         toMoment: (value) => moment(dateFunctions.DateTime.toStandardDate(value)),
     },
     LocalDateTime: {
         _isDateTypeNeo4j: true,
-        toStandardDate: (value) => new Date(value.year, value.month - 1, value.day, value.hour, value.minute, value.second, value.nanosecond),
+        toStandardDate: (value) => new Date(value.year, value.month - 1, value.day, value.hour, value.minute, value.second, value.nanosecond / 1e+6),
         toMoment: (value) => moment(dateFunctions.LocalDateTime.toStandardDate(value)),
     },
     Time: {
         _isDateTypeNeo4j: true,
-        toStandardDate: (value) => new Date(0, 0, 0, value.hour, value.minute, value.second, value.nanosecond),
+        toStandardDate: (value) => new Date(0, 0, 0, value.hour, value.minute, value.second, value.nanosecond / 1e+6),
         toMoment: (value) => moment(dateFunctions.Time.toStandardDate(value)),
     },
     LocalTime: {
         _isDateTypeNeo4j: true,
-        toStandardDate: (value) => new Date(0, 0, 0, value.hour, value.minute, value.second, value.nanosecond),
+        toStandardDate: (value) => new Date(0, 0, 0, value.hour, value.minute, value.second, value.nanosecond / 1e+6),
         toMoment: (value) => moment(dateFunctions.LocalTime.toStandardDate(value)),
     },
 };
