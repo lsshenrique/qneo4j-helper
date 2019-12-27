@@ -88,8 +88,8 @@ module.exports = class QNeo4jHelper {
     }
 
     static isDateObject(value) {
-        return typeof value === "object"
-            && Object.keys(value).some(e => ["year", "month", "day", "hour", "minute", "second"].indexOf(e) > -1);
+        return typeof value === "object" &&
+            Object.keys(value).some(e => ["year", "month", "day", "hour", "minute", "second"].indexOf(e) > -1);
     }
 
     static toStandardDate(value) {
@@ -203,6 +203,14 @@ module.exports = class QNeo4jHelper {
 
     static _hasFields(records) {
         return records && records.length > 0 && records[0]._fields && records[0]._fields.length > 0;
+    }
+
+    static toIntOrNull(value) {
+        return Number.parseInt(value, 10) || null;
+    }
+
+    static toFloatOrNull(value) {
+        return Number.parseFloat(value) || null;
     }
 };
 
