@@ -212,6 +212,21 @@ module.exports = class QNeo4jHelper {
     static toFloatOrNull(value) {
         return Number.parseFloat(value) || null;
     }
+
+    static clearStringForRegex(value) {
+        if (!value) return null;
+
+        return _.dropWhile(value, (o) => o === '*')
+            .join('')
+            .replace(/\|/g, '\\\|')
+            .replace(/\\/g, '\\\\')
+            .replace(/\(/g, '\\\(')
+            .replace(/\)/g, '\\\)')
+            .replace(/\[/g, '\\\[')
+            .replace(/\]/g, '\\\]')
+            .replace(/\{/g, '\\\{')
+            .replace(/\}/g, '\\\}');
+    }
 };
 
 module.exports.injectDateFunctions = injectDateFunctions;
