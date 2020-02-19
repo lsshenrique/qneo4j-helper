@@ -181,6 +181,8 @@ module.exports = class QNeo4jHelper {
                     valueAux = dateFunctions[value.constructor.name].toMoment(value);
                 } else if (options.dateType === 'native') {
                     valueAux = dateFunctions[value.constructor.name].toStandardDate(value);
+                } else if (options.dateType === 'timestamp') {
+                    valueAux = dateFunctions[value.constructor.name].toStandardDate(value).valueOf();
                 } else {
                     valueAux = value;
                 }
