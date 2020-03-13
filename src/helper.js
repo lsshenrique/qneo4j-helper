@@ -82,9 +82,16 @@ module.exports = class QNeo4jHelper {
         return JSON.stringify(params).replace(/\"([^(\")"]+)\":/g, "$1:");
     }
 
+    static objClone(value) {
+        return _.clone(value);
+    }
+
     static isDateTypeNeo4j(value) {
         const typeName = value.constructor.name;
         return value && value[`__is${typeName}__`] && dateFunctions[typeName];
+    }
+    static isIntegerNeo4j(value) {
+        return value instanceof types.Integer;
     }
 
     static isDateObject(value) {
