@@ -1,6 +1,6 @@
 {
     "name": "@qualitech/qneo4j-helper",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "description": "This module focuses on making using Neo4j for JavaScript easier by making its coding cleaner and shorter.",
     "main": "src/index.js",
     "scripts": {
